@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace 'com.example.gamebooster'
-    compileSdk 33 // Kita turunin ke 33 biar stabil
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.example.gamebooster"
         minSdk 24
-        targetSdk 33
+        targetSdk 34
         versionCode 1
         versionName "1.0"
     }
